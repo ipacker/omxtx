@@ -15,12 +15,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -268,7 +268,7 @@ static void dumpport(OMX_HANDLETYPE handle, int port)
 			portdef->format.image.nSliceHeight,
 			portdef->format.image.bFlagErrorConcealment,
 			portdef->format.image.eCompressionFormat,
-			portdef->format.image.eColorFormat); 		
+			portdef->format.image.eColorFormat);
 		break;
 /* Feel free to add others. */
 	default:
@@ -352,7 +352,7 @@ static AVFormatContext *makeoutputcontext(AVFormatContext *ic,
 		fprintf(stderr, "Can't guess format for %s; defaulting to "
 			"MPEG\n",
 			oname);
-		fmt = av_guess_format(NULL, "MPEG", NULL);
+		fmt = av_guess_format(NULL, "test.flv", NULL);
 	}
 	if (!fmt) {
 		fprintf(stderr, "Failed even that.  Bye bye.\n");
@@ -423,7 +423,7 @@ printf("Time base: %d/%d, fps %d/%d\n", oflow->time_base.num, oflow->time_base.d
 /* Apparently fixes a crash on .mkvs with attachments: */
 			av_dict_copy(&oflow->metadata, iflow->metadata, 0);
 /* Reset the codec tag so as not to cause problems with output format */
-			oflow->codec->codec_tag = 0; 
+			oflow->codec->codec_tag = 0;
 		}
 	}
 	for (i = 0; i < oc->nb_streams; i++) {
@@ -471,7 +471,7 @@ static void writenonvideopacket(AVPacket *pkt)
 	} else {
 		av_free_packet(pkt);
 	}
-	
+
 }
 
 
@@ -490,6 +490,8 @@ static void openoutput(struct context *ctx)
 #ifndef URL_WRONLY
 #define URL_WRONLY AVIO_FLAG_WRITE
 #endif
+
+	printf("Attempting avio_open()...");
 	avio_open(&oc->pb, ctx->oname, URL_WRONLY);
 
 	r = avformat_write_header(oc, NULL);
@@ -559,14 +561,14 @@ OMX_ERRORTYPE genericeventhandler(OMX_HANDLETYPE component,
 				mapcomponent(ctx, component), component,
 				data1, data2);
 	}
-	
+
 	return OMX_ErrorNone;
 }
 
 
 OMX_ERRORTYPE deceventhandler(OMX_HANDLETYPE component,
 				struct context *ctx,
-				OMX_EVENTTYPE event, 
+				OMX_EVENTTYPE event,
 				OMX_U32 data1,
 				OMX_U32 data2,
 				OMX_PTR eventdata)
@@ -582,7 +584,7 @@ OMX_ERRORTYPE deceventhandler(OMX_HANDLETYPE component,
 
 OMX_ERRORTYPE enceventhandler(OMX_HANDLETYPE component,
 				struct context *ctx,
-				OMX_EVENTTYPE event, 
+				OMX_EVENTTYPE event,
 				OMX_U32 data1,
 				OMX_U32 data2,
 				OMX_PTR eventdata)
@@ -794,7 +796,7 @@ static AVPacket *filter(struct context *ctx, AVPacket *rp)
 				av_make_error_string(err, sizeof(err), rc));
 #endif
 			p = rp;
-		} 
+		}
 	} else
 		p = rp;
 
@@ -1228,7 +1230,7 @@ static int getnextvideopacket(AVPacket *pkt)
 					writenonvideopacket(pkt);
 				} else if ((ctx.flags & FLAGS_RAW) == 0) {
 					/*
-					   Save packet for when we open the output file 
+					   Save packet for when we open the output file
 					 */
 					struct packetentry *entry;
 					entry =
@@ -1237,7 +1239,7 @@ static int getnextvideopacket(AVPacket *pkt)
 					TAILQ_INSERT_TAIL(&packetq, entry,
 							  link);
 					/*
-					   We've copied out the contents of the packet so re-initialise 
+					   We've copied out the contents of the packet so re-initialise
 					 */
 					av_init_packet(pkt);
 				} else {
@@ -1379,7 +1381,7 @@ int main(int argc, char *argv[])
 	}
 	printf("Found a video at index %d\n", vidindex);
 
-	printf("Frame size: %dx%d\n", ic->streams[vidindex]->codec->width, 
+	printf("Frame size: %dx%d\n", ic->streams[vidindex]->codec->width,
 		ic->streams[vidindex]->codec->height);
 	ish264 = (ic->streams[vidindex]->codec->codec_id == AV_CODEC_ID_H264);
 
@@ -1443,7 +1445,7 @@ int main(int argc, char *argv[])
 	printf("Mapping codec %d to %d\n",
 		ic->streams[vidindex]->codec->codec_id,
 		mapcodec(ic->streams[vidindex]->codec->codec_id));
-	viddef->eCompressionFormat = 
+	viddef->eCompressionFormat =
 		mapcodec(ic->streams[vidindex]->codec->codec_id);
 	viddef->bFlagErrorConcealment = 0;
 //	viddef->xFramerate = 25<<16;
@@ -1609,7 +1611,7 @@ int main(int argc, char *argv[])
 				AVPacket pkt;
 				int r;
 				OMX_TICKS tick = spare->nTimeStamp;
-				int writepkt = (pps && sps);
+				int writepkt = (pps || sps);
 
 				if (ctx.flags & FLAGS_RAW) {
 					write(fd,
@@ -1671,6 +1673,7 @@ int main(int argc, char *argv[])
 				if (pkt.data[0] == 0 && pkt.data[1] == 0 &&
 					pkt.data[2] == 0 && pkt.data[3] == 1) {
 					int nt = pkt.data[4] & 0x1f;
+					printf("Reading unit type: %d\n", nt);
 					if (nt == 7) {
 						if (sps)
 							free(sps);
@@ -1712,6 +1715,13 @@ int main(int argc, char *argv[])
 							       ppssize);
 							openoutput(&ctx);
 							ctx.decstate = ENCRUNNING;
+						} else if(sps) {
+							c->extradata_size = spssize;
+							c->extradata = malloc(spssize);
+							memcpy(c->extradata,
+										 sps, spssize);
+							openoutput(&ctx);
+							ctx.decstate = ENCRUNNING;
 						}
 					}
 				}
@@ -1723,7 +1733,7 @@ int main(int argc, char *argv[])
 						av_strerror(r, err, sizeof(err));
 						printf("Failed to write a video frame: %s (%lld, %llx; %d %d) %x.\n", err, pkt.pts, pkt.pts, tick.nLowPart, tick.nHighPart, spare->nFlags);
 					} else {
-//						printf("Wrote a video frame! %lld (%llx)\n", pkt.pts, pkt.pts);
+						printf("Wrote a video frame! %lld (%llx)\n", pkt.pts, pkt.pts);
 						av_free_packet(&pkt);
 					}
 				}
