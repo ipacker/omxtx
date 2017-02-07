@@ -1673,7 +1673,7 @@ int main(int argc, char *argv[])
 				if (pkt.data[0] == 0 && pkt.data[1] == 0 &&
 					pkt.data[2] == 0 && pkt.data[3] == 1) {
 					int nt = pkt.data[4] & 0x1f;
-					printf("Reading unit type: %d\n", nt);
+					//printf("Reading unit type: %d\n", nt);
 					if (nt == 7) {
 						if (sps)
 							free(sps);
@@ -1733,7 +1733,7 @@ int main(int argc, char *argv[])
 						av_strerror(r, err, sizeof(err));
 						printf("Failed to write a video frame: %s (%lld, %llx; %d %d) %x.\n", err, pkt.pts, pkt.pts, tick.nLowPart, tick.nHighPart, spare->nFlags);
 					} else {
-						printf("Wrote a video frame! %lld (%llx)\n", pkt.pts, pkt.pts);
+						//printf("Wrote a video frame! %lld (%llx)\n", pkt.pts, pkt.pts);
 						av_free_packet(&pkt);
 					}
 				}
